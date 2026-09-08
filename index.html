@@ -282,14 +282,8 @@ tr.result td{font-size:17px}
           <div class="small muted" style="margin-top:6px">Weights must total 100. Category points = judge score × weight ÷ 10, so a perfect sheet totals 100.</div>
         </details>
         <div class="row" style="margin-top:18px;justify-content:space-between">
-          <div class="row">
-            <button class="btn primary" id="btnShare">Copy student link</button>
-          </div>
+          <div class="small muted">Students open <span class="num" id="siteAddr" style="font-weight:600;color:var(--ink)"></span></div>
           <button class="btn quiet" id="btnNewDiv">Reset to built-in division</button>
-        </div>
-        <div class="codebox" id="shareBox" hidden>
-          <div class="eyebrow" style="margin-bottom:6px">Student link — opens straight to the welcome page for this division</div><div class="small muted" style="margin-bottom:6px" id="shareNote"></div>
-          <textarea id="shareUrl" readonly style="min-height:56px"></textarea>
         </div>
       </details>
     </div>
@@ -525,11 +519,7 @@ $("#divHeat").addEventListener("input",e=>{state.division.heat=e.target.value;sa
 $("#divPin").addEventListener("input",e=>{state.division.pin=e.target.value.trim()||DEFAULT_PIN;save();});
 $("#btnAddComp").addEventListener("click",()=>{state.division.competitors.push({id:uid(),number:"",name:""});save();renderAll();});
 $("#btnNewDiv").addEventListener("click",()=>{if(!confirm("Reset to the built-in division? This restores the six built-in entries and removes all judges' sheets on this device."))return;state=blankState(state.division.pin);draft=freshDraft();saveDraft();save();renderAll();$("#divName").focus();});
-$("#btnShare").addEventListener("click",()=>{
-  const base=location.origin+location.pathname;
-  const url=isBuiltin(state.division)?base:base+"#d="+divKey(state.division);
-  $("#shareUrl").value=url; $("#shareNote").textContent=isBuiltin(state.division)?"This division is built into the page, so the plain address is enough.":"These entries differ from the built-in division, so the link carries them."; $("#shareBox").hidden=false; copyText($("#shareUrl"));
-});
+$("#siteAddr").textContent=(location.protocol.startsWith("http")?location.origin+location.pathname:"the site address").replace(/^https?:\/\//,"");
 $("#btnAddCode").addEventListener("click",()=>{
   const msg=$("#pasteMsg");
   try{
