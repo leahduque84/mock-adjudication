@@ -255,6 +255,7 @@ tr.result td{font-size:17px}
     <input id="pinInput" type="password" placeholder="Passcode" autocomplete="off">
     <button class="btn primary" id="btnUnlock">Open Scrutineer</button>
     <div id="pinMsg" class="small" style="margin-top:10px;color:var(--accent)"></div>
+    <div style="margin-top:18px"><button class="btn quiet sm" id="btnBackToJudge">Back to judging</button></div>
   </section>
 
   <section id="view-tab" hidden>
@@ -284,10 +285,10 @@ tr.result td{font-size:17px}
           <div class="row">
             <button class="btn primary" id="btnShare">Copy student link</button>
           </div>
-          <button class="btn quiet" id="btnNewDiv">Start a new division</button>
+          <button class="btn quiet" id="btnNewDiv">Reset to built-in division</button>
         </div>
         <div class="codebox" id="shareBox" hidden>
-          <div class="eyebrow" style="margin-bottom:6px">Student link — opens straight to the welcome page for this division</div>
+          <div class="eyebrow" style="margin-bottom:6px">Student link — opens straight to the welcome page for this division</div><div class="small muted" style="margin-bottom:6px" id="shareNote"></div>
           <textarea id="shareUrl" readonly style="min-height:56px"></textarea>
         </div>
       </details>
@@ -322,7 +323,9 @@ tr.result td{font-size:17px}
 (function(){
 "use strict";
 const DEFAULT_CATS=[["Timing",20],["Musicality",15],["Technique",15],["Difficulty",15],["Connection",15],["Choreography",10],["Presentation",10]].map(([name,weight])=>({name,weight}));
-const DIVISION_NAME="Professional Salsa Cabaret Showcase", DEFAULT_PIN="eventtabs";
+const DIVISION_NAME="Professional Salsa Cabaret Showcase", DIVISION_HEAT="10000", DEFAULT_PIN="Judge2026";
+// Built into the page so the student link needs no entry list and no browser storage.
+const DEFAULT_ENTRIES=[["e1","101","Jhaime & Sasha"],["e2","102","Angel & Stefany"],["e3","103","Pipe & Kathe"],["e4","104","Brayan & Evelyn"],["e5","105","Jorge & Juanita"],["e6","106","Daniela & Yeremy"]];
 const KEY="showcase-scrutineer-v1", JKEY="showcase-scrutineer-judge-v1", UKEY="showcase-scrutineer-unlocked";
 const $=s=>document.querySelector(s);
 const uid=()=>Math.random().toString(36).slice(2,8);
@@ -331,21 +334,23 @@ const fmt=x=>(Math.round(x*100)/100).toString();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ORD=["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th"];
 
-function blankState(pin){return {division:{name:DIVISION_NAME,heat:"",pin:pin||DEFAULT_PIN,competitors:[{id:uid(),number:"",name:""},{id:uid(),number:"",name:""},{id:uid(),number:"",name:""}],cats:DEFAULT_CATS.map(c=>({...c}))},judges:[]};}
+function blankState(pin){return {division:{name:DIVISION_NAME,heat:DIVISION_HEAT,pin:pin||DEFAULT_PIN,competitors:DEFAULT_ENTRIES.map(([id,number,name])=>({id,number,name})),cats:DEFAULT_CATS.map(c=>({...c}))},judges:[]};}
+const isBuiltin=d=>d.name===DIVISION_NAME&&String(d.heat)===DIVISION_HEAT&&d.competitors.length===DEFAULT_ENTRIES.length&&d.competitors.every((c,i)=>c.number===DEFAULT_ENTRIES[i][1]&&c.name===DEFAULT_ENTRIES[i][2])&&d.cats.length===DEFAULT_CATS.length&&d.cats.every((c,i)=>c.name===DEFAULT_CATS[i].name&&c.weight===DEFAULT_CATS[i].weight);
 const freshDraft=()=>({name:"",scores:{},idx:0,begun:false});
 
 /* ---------- encoding ---------- */
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4))));
 // The student link carries the division but never the passcode.
-const divKey=d=>b64e(JSON.stringify({n:d.name,h:d.heat,c:d.competitors.map(c=>[c.id,c.number,c.name]),w:d.cats.map(c=>[c.name,c.weight])}));
-function divFromKey(k){const o=JSON.parse(b64d(k));return {name:o.n,heat:o.h,competitors:o.c.map(([id,number,name])=>({id,number,name})),cats:o.w.map(([name,weight])=>({name,weight}))};}
-const divSig=d=>b64e(d.competitors.map(c=>c.id).join(",")+"|"+d.name).slice(0,12);
-function encodeSheet(judge,d){return "ADJ1."+b64e(JSON.stringify({j:judge.name,g:divSig(d),t:judge.submittedAt,s:judge.scores}));}
+const divKey=d=>{const o={c:d.competitors.map(c=>[c.number,c.name])}; if(d.name!==DIVISION_NAME)o.n=d.name; if(String(d.heat)!==DIVISION_HEAT)o.h=d.heat; if(d.cats.some((c,i)=>!DEFAULT_CATS[i]||c.name!==DEFAULT_CATS[i].name||c.weight!==DEFAULT_CATS[i].weight))o.w=d.cats.map(c=>[c.name,c.weight]); return b64e(JSON.stringify(o));};
+function divFromKey(k){const o=JSON.parse(b64d(k));return {name:o.n??DIVISION_NAME,heat:o.h??DIVISION_HEAT,competitors:o.c.map((row,i)=>{const [a,b,c]=row;return row.length===3?{id:a,number:b,name:c}:{id:"e"+(i+1),number:a,name:b};}),cats:(o.w||DEFAULT_CATS.map(c=>[c.name,c.weight])).map(([name,weight])=>({name,weight}))};}
+const divSig=d=>b64e(d.competitors.map(c=>(c.number||"")+":"+(c.name||"").trim().toLowerCase()).join(",")+"|"+d.name.trim().toLowerCase()).slice(0,16);
+function encodeSheet(judge,d){return "ADJ1."+b64e(JSON.stringify({j:judge.name,g:divSig(d),t:judge.submittedAt,s:d.competitors.map(c=>judge.scores[c.id]||null)}));}
 function decodeSheet(code){
   const m=String(code).trim().match(/ADJ1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error("That doesn't look like a score code. It should start with ADJ1.");
   const o=JSON.parse(b64d(m[1])); if(!o.j||!o.s) throw new Error("The code is incomplete.");
-  return {id:uid(),name:String(o.j),submittedAt:o.t||Date.now(),scores:o.s,sig:o.g};
+  const list=Array.isArray(o.s)?o.s:Object.values(o.s); // older codes were keyed by entry id, in entry order
+  return {id:uid(),name:String(o.j),submittedAt:o.t||Date.now(),list,sig:o.g};
 }
 
 /* ---------- state ---------- */
@@ -356,7 +361,8 @@ function load(){
       if(!s.division.pin) s.division.pin=DEFAULT_PIN;
       // Earlier versions shipped example judges' sheets; drop them and keep the saved division as is.
       s.judges=s.judges.filter(j=>!/^Example judge/.test(j.name||""));
-      if(s.division.competitors.length&&s.division.competitors.every(c=>/^Example:/.test(c.name||""))) return blankState(s.division.pin);
+      const placeholder=s.division.competitors.every(c=>!(c.name||"").trim()||/^Example:/.test(c.name));
+      if(placeholder&&!s.judges.length) return blankState(s.division.pin);
       return s;
     }}catch(e){}
   return blankState();
@@ -401,17 +407,18 @@ function setView(v){
   $("#j-done").hidden=!(judge&&draft.begun&&draft.idx>=state.division.competitors.length);
   $("#view-lock").hidden=!(v==="tab"&&!unlocked);
   $("#view-tab").hidden=!(v==="tab"&&unlocked);
-  $("#footLink").hidden=!(studentMode&&judge);
+  $("#footLink").hidden=!(!unlocked&&judge);
   if(!studentMode){try{localStorage.setItem(KEY+"-view",v);}catch(e){}}
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.view)));
-$("#btnInstructor").addEventListener("click",()=>{$("#tabs").hidden=false;setView("tab");$("#pinInput").focus();});
+$("#btnInstructor").addEventListener("click",()=>{setView("tab");$("#pinInput").focus();});
 $("#btnUnlock").addEventListener("click",tryUnlock);
+$("#btnBackToJudge").addEventListener("click",()=>setView("judge"));
 $("#pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryUnlock();});
 function tryUnlock(){
   const pin=(state.division.pin||DEFAULT_PIN);
-  if($("#pinInput").value===pin){unlocked=true;try{sessionStorage.setItem(UKEY,"1");}catch(e){} $("#pinInput").value="";$("#pinMsg").textContent="";setView("tab");}
-  else{$("#pinMsg").textContent="That passcode doesn't match. The passcode is set in Division setup; the default is “eventtabs”.";}
+  if($("#pinInput").value===pin){unlocked=true;studentMode=false;$("#tabs").hidden=false;try{sessionStorage.setItem(UKEY,"1");}catch(e){} $("#pinInput").value="";$("#pinMsg").textContent="";setView("tab");}
+  else{$("#pinMsg").textContent="That passcode doesn't match. It is set in the Scrutineer's Division setup.";}
 }
 
 /* ---------- judge: welcome ---------- */
@@ -517,16 +524,19 @@ $("#divName").addEventListener("input",e=>{state.division.name=e.target.value;sa
 $("#divHeat").addEventListener("input",e=>{state.division.heat=e.target.value;save();renderJudgeSide();$("#bannerHeat2").textContent=state.division.heat?Number(state.division.heat).toFixed(1):"—";});
 $("#divPin").addEventListener("input",e=>{state.division.pin=e.target.value.trim()||DEFAULT_PIN;save();});
 $("#btnAddComp").addEventListener("click",()=>{state.division.competitors.push({id:uid(),number:"",name:""});save();renderAll();});
-$("#btnNewDiv").addEventListener("click",()=>{if(!confirm("Start a new division? This removes the current entries and all judges' sheets on this device."))return;state=blankState(state.division.pin);draft=freshDraft();saveDraft();save();renderAll();$("#divName").focus();});
+$("#btnNewDiv").addEventListener("click",()=>{if(!confirm("Reset to the built-in division? This restores the six built-in entries and removes all judges' sheets on this device."))return;state=blankState(state.division.pin);draft=freshDraft();saveDraft();save();renderAll();$("#divName").focus();});
 $("#btnShare").addEventListener("click",()=>{
-  const url=location.origin+location.pathname+"#d="+divKey(state.division);
-  $("#shareUrl").value=url; $("#shareBox").hidden=false; copyText($("#shareUrl"));
+  const base=location.origin+location.pathname;
+  const url=isBuiltin(state.division)?base:base+"#d="+divKey(state.division);
+  $("#shareUrl").value=url; $("#shareNote").textContent=isBuiltin(state.division)?"This division is built into the page, so the plain address is enough.":"These entries differ from the built-in division, so the link carries them."; $("#shareBox").hidden=false; copyText($("#shareUrl"));
 });
 $("#btnAddCode").addEventListener("click",()=>{
   const msg=$("#pasteMsg");
   try{
     const j=decodeSheet($("#pasteCode").value);
-    const missing=state.division.competitors.filter(c=>!j.scores[c.id]);
+    const comps=state.division.competitors;
+    j.scores={}; comps.forEach((c,i)=>{if(j.list[i])j.scores[c.id]=j.list[i];}); delete j.list;
+    const missing=comps.filter(c=>!j.scores[c.id]);
     if(j.sig!==divSig(state.division)||missing.length){
       msg.innerHTML=`<span class="chip warn">Different division</span> This code was scored on a different entry list. Load that division first, or ask the student to rescore from your current student link.`;
       return;
@@ -607,16 +617,14 @@ state=load(); loadDraft();
 try{unlocked=sessionStorage.getItem(UKEY)==="1";}catch(e){}
 const hash=new URLSearchParams(location.hash.replace(/^#/,""));
 if(hash.get("d")){
-  // Student link: judge flow only, no Scrutineer tab.
-  studentMode=true; $("#tabs").hidden=true;
   try{
     const inc=divFromKey(hash.get("d"));
     if(divSig(inc)!==divSig(state.division)){ inc.pin=state.division.pin; state.division=inc; state.judges=[]; draft=freshDraft(); saveDraft(); save(); }
   }catch(e){}
-  view="judge";
-}else{
-  view="judge"; try{view=localStorage.getItem(KEY+"-view")||"judge";}catch(e){}
 }
+// Everyone lands on the judge flow. The tabs appear only once the Scrutineer has been unlocked in this browser session.
+studentMode=!unlocked; $("#tabs").hidden=!unlocked;
+view="judge"; if(unlocked){try{view=localStorage.getItem(KEY+"-view")||"judge";}catch(e){}}
 if(draft.begun&&draft.idx>=state.division.competitors.length&&!draft.code){
   const j=state.judges.find(x=>x.name.toLowerCase()===(draft.name||"").toLowerCase()); if(j) draft.code=encodeSheet(j,state.division);
 }
