@@ -283,7 +283,6 @@ tr.result td{font-size:17px}
         <div class="row" style="margin-top:18px;justify-content:space-between">
           <div class="row">
             <button class="btn primary" id="btnShare">Copy student link</button>
-            <button class="btn" id="btnExample">Load example</button>
           </div>
           <button class="btn quiet" id="btnNewDiv">Start a new division</button>
         </div>
@@ -332,17 +331,6 @@ const fmt=x=>(Math.round(x*100)/100).toString();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ORD=["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th"];
 
-/* ---------- example division (plainly marked) ---------- */
-function exampleState(){
-  const comps=[{id:"c1",number:"101",name:"Example: Alvarez & Chen"},{id:"c2",number:"102",name:"Example: Okafor & Reyes"},{id:"c3",number:"103",name:"Example: Nakamura & Silva"}];
-  const mk=(name,rows)=>({id:uid(),name,submittedAt:Date.now(),scores:Object.fromEntries(comps.map((c,i)=>[c.id,{s:rows[i],p:0}]))});
-  return {division:{name:DIVISION_NAME,heat:"10000",pin:DEFAULT_PIN,competitors:comps,cats:DEFAULT_CATS.map(c=>({...c}))},
-    judges:[
-      mk("Example judge A",[[8.5,8.2,8.6,8.4,8.3,8.0,8.5],[9.0,8.8,9.1,9.3,8.9,8.7,9.0],[7.8,8.0,7.6,7.5,8.1,8.2,7.9]]),
-      mk("Example judge B",[[8.8,8.5,8.4,8.6,8.7,8.3,8.6],[8.6,9.0,8.9,9.0,9.2,8.8,9.1],[8.0,7.9,7.8,7.7,8.0,8.0,8.2]]),
-      mk("Example judge C",[[8.2,8.4,8.5,8.3,8.1,8.4,8.3],[9.2,8.9,9.0,9.1,9.0,9.0,8.9],[7.5,7.8,7.9,7.6,7.7,8.1,7.8]])
-    ]};
-}
 function blankState(pin){return {division:{name:DIVISION_NAME,heat:"",pin:pin||DEFAULT_PIN,competitors:[{id:uid(),number:"",name:""},{id:uid(),number:"",name:""},{id:uid(),number:"",name:""}],cats:DEFAULT_CATS.map(c=>({...c}))},judges:[]};}
 const freshDraft=()=>({name:"",scores:{},idx:0,begun:false});
 
@@ -363,8 +351,15 @@ function decodeSheet(code){
 /* ---------- state ---------- */
 let state, view="judge", draft=freshDraft(), studentMode=false, unlocked=false, openJudge=null;
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.division&&s.judges){ if(!s.division.pin) s.division.pin=DEFAULT_PIN; return s; }}catch(e){}
-  return exampleState();
+  try{const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.division&&s.judges){
+      if(!s.division.pin) s.division.pin=DEFAULT_PIN;
+      // Earlier versions shipped example judges' sheets; drop them and keep the saved division as is.
+      s.judges=s.judges.filter(j=>!/^Example judge/.test(j.name||""));
+      if(s.division.competitors.length&&s.division.competitors.every(c=>/^Example:/.test(c.name||""))) return blankState(s.division.pin);
+      return s;
+    }}catch(e){}
+  return blankState();
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function saveDraft(){try{localStorage.setItem(JKEY,JSON.stringify(draft));}catch(e){}}
@@ -522,7 +517,6 @@ $("#divName").addEventListener("input",e=>{state.division.name=e.target.value;sa
 $("#divHeat").addEventListener("input",e=>{state.division.heat=e.target.value;save();renderJudgeSide();$("#bannerHeat2").textContent=state.division.heat?Number(state.division.heat).toFixed(1):"—";});
 $("#divPin").addEventListener("input",e=>{state.division.pin=e.target.value.trim()||DEFAULT_PIN;save();});
 $("#btnAddComp").addEventListener("click",()=>{state.division.competitors.push({id:uid(),number:"",name:""});save();renderAll();});
-$("#btnExample").addEventListener("click",()=>{const pin=state.division.pin;state=exampleState();state.division.pin=pin;draft=freshDraft();saveDraft();save();renderAll();toast("Example division loaded");});
 $("#btnNewDiv").addEventListener("click",()=>{if(!confirm("Start a new division? This removes the current entries and all judges' sheets on this device."))return;state=blankState(state.division.pin);draft=freshDraft();saveDraft();save();renderAll();$("#divName").focus();});
 $("#btnShare").addEventListener("click",()=>{
   const url=location.origin+location.pathname+"#d="+divKey(state.division);
