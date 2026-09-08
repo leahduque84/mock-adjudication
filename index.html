@@ -249,9 +249,9 @@ tr.result td{font-size:17px}
 
   <!-- ================= SCRUTINEER ================= -->
   <section id="view-lock" hidden class="lock">
-    <div class="eyebrow">Instructor only</div>
+    <div class="eyebrow">Admin only</div>
     <h2 style="font-size:32px;margin-top:6px">Scrutineer</h2>
-    <p class="muted">Enter the instructor passcode to open division setup and results.</p>
+    <p class="muted">Enter the admin passcode to open division setup and results.</p>
     <input id="pinInput" type="password" placeholder="Passcode" autocomplete="off">
     <button class="btn primary" id="btnUnlock">Open Scrutineer</button>
     <div id="pinMsg" class="small" style="margin-top:10px;color:var(--accent)"></div>
@@ -269,7 +269,7 @@ tr.result td{font-size:17px}
         <div class="row" style="margin-top:14px">
           <div class="field" style="flex:2;min-width:240px"><label for="divName">Division name</label><input id="divName"></div>
           <div class="field" style="width:130px"><label for="divHeat">Heat / division #</label><input id="divHeat" class="num"></div>
-          <div class="field" style="width:170px"><label for="divPin">Instructor passcode</label><input id="divPin" autocomplete="off"></div>
+          <div class="field" style="width:170px"><label for="divPin">Admin passcode</label><input id="divPin" autocomplete="off"></div>
         </div>
         <div class="eyebrow" style="margin:18px 0 8px">Entries in this division</div>
         <div class="comp-grid" id="compGrid"></div>
@@ -309,7 +309,7 @@ tr.result td{font-size:17px}
     <div id="results"></div>
   </section>
 
-  <div class="foot-link" id="footLink" hidden><button id="btnInstructor">Instructor access</button></div>
+  <div class="foot-link" id="footLink" hidden><button id="btnInstructor">Admin access</button></div>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
