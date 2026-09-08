@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Showcase Scrutineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+:root{
+  --ground:#F2F3F7; --surface:#FFFFFF; --sunken:#E9EAF1; --line:#D3D5E0; --line-strong:#B5B8C9;
+  --ink:#1B1D2E; --ink-2:#4B4F66; --ink-3:#7C8099;
+  --accent:#D8342C; --accent-ink:#FFFFFF; --accent-soft:#FBE5E3;
+  --good:#1F8A4C; --good-soft:#DFF3E6; --warn:#B7791F; --warn-soft:#FBEFD6;
+  --place-1:#C9A227; --place-2:#8E94A8; --place-3:#A8703C;
+  --shadow:0 1px 2px rgba(27,29,46,.06),0 6px 20px rgba(27,29,46,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#15161F; --surface:#1F2130; --sunken:#171924; --line:#33364A; --line-strong:#4A4E66;
+    --ink:#F0F1F7; --ink-2:#C0C3D4; --ink-3:#868AA3;
+    --accent:#F0524A; --accent-ink:#1B1D2E; --accent-soft:#3A2225;
+    --good:#4CC17A; --good-soft:#1E3A2A; --warn:#E3A83C; --warn-soft:#3C3020;
+    --place-1:#E0BB3A; --place-2:#A9AFC4; --place-3:#C58A4F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15161F; --surface:#1F2130; --sunken:#171924; --line:#33364A; --line-strong:#4A4E66;
+  --ink:#F0F1F7; --ink-2:#C0C3D4; --ink-3:#868AA3;
+  --accent:#F0524A; --accent-ink:#1B1D2E; --accent-soft:#3A2225;
+  --good:#4CC17A; --good-soft:#1E3A2A; --warn:#E3A83C; --warn-soft:#3C3020;
+  --place-1:#E0BB3A; --place-2:#A9AFC4; --place-3:#C58A4F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.45}
+h1,h2,h3,.disp{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif;font-weight:600;letter-spacing:.01em;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:8px 10px}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.muted{color:var(--ink-2)} .small{font-size:14px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+
+/* header */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-top:14px;padding-bottom:0;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:12px;padding-bottom:12px}
+.brand .mark{width:12px;height:26px;background:var(--accent);transform:skewX(-12deg);align-self:center}
+.brand h1{font-size:26px;line-height:1}
+.brand .sub{font-size:13px;color:var(--ink-3)}
+.tabs{display:flex;gap:4px}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 12px;font-weight:600;color:var(--ink-2);font-size:15px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* division banner - mirrors the judge screen header */
+.banner{margin:22px 0 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:var(--shadow)}
+.banner h2{font-size:30px}
+.banner .ht{font-size:26px;font-weight:700}
+.banner .ht span{font-size:14px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;margin-right:8px;font-family:"Source Sans 3",sans-serif}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:18px}
+.panel h3{font-size:22px;margin-bottom:10px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 16px;font-weight:600}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(.95)}
+.btn.quiet{border-color:transparent;color:var(--ink-2)}
+.btn.sm{padding:5px 10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+details>summary{cursor:pointer;font-weight:600;color:var(--ink-2);list-style:none;display:flex;align-items:center;gap:8px}
+details>summary::before{content:"";width:0;height:0;border-left:6px solid var(--ink-3);border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .15s}
+details[open]>summary::before{transform:rotate(90deg)}
+@media (prefers-reduced-motion:reduce){details>summary::before{transition:none}}
+
+/* welcome */
+.welcome{max-width:560px;margin:40px auto 0;text-align:center}
+.welcome .eyebrow{margin-bottom:10px}
+.welcome h2{font-size:42px;line-height:1.05;margin-bottom:6px}
+.welcome .ht{font-size:15px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:34px}
+.welcome .field{text-align:left;margin-bottom:18px}
+.welcome input{font-size:20px;padding:12px 14px}
+.welcome .btn{width:100%;padding:14px;font-size:19px}
+.welcome .hint{margin-top:22px;font-size:14px;color:var(--ink-3);text-wrap:balance}
+
+/* judge sheet - mirrors EventTabs cards */
+.judgebar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.judgebar .who{font-weight:600}
+.judgebar .who span{color:var(--ink-3);font-weight:400}
+.progress{display:flex;gap:6px}
+.progress i{display:block;width:34px;height:6px;border-radius:3px;background:var(--line)}
+.progress i.done{background:var(--good)} .progress i.now{background:var(--accent)}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:18px;overflow:hidden}
+.sheet header{padding:18px 22px 14px;text-align:center;border-bottom:1px solid var(--line)}
+.sheet header .bib{display:inline-block;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px;letter-spacing:.08em;color:var(--ink-3);border:1px solid var(--line-strong);border-radius:4px;padding:1px 8px;margin-bottom:6px}
+.sheet header h3{font-size:28px;font-weight:500;letter-spacing:.02em}
+.cats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:22px 26px;max-width:960px;margin:0 auto}
+.cat{border:3px solid var(--sunken);border-radius:4px;background:var(--sunken)}
+.cat .name{background:var(--surface);text-align:center;font-weight:700;font-size:14px;padding:9px 4px;border-bottom:3px solid var(--sunken)}
+.cat input{width:100%;border:0;border-radius:0;background:transparent;text-align:center;font-size:30px;font-weight:600;font-family:"Barlow Condensed",sans-serif;padding:12px 4px;color:var(--ink)}
+.cat input::placeholder{color:var(--line-strong);font-weight:500}
+.cat input:focus-visible{outline:none;box-shadow:inset 0 0 0 3px var(--accent)}
+.cat.bad{border-color:var(--accent)}
+.cat.bad .name{border-bottom-color:var(--accent)}
+.cats .cat:nth-child(5){grid-column:1/2;margin-left:12.5%}
+.cats .cat:nth-child(5),.cats .cat:nth-child(6),.cats .cat:nth-child(7){width:112.5%}
+.cats .cat:nth-child(6){grid-column:2/3;margin-left:25%}
+.cats .cat:nth-child(7){grid-column:3/4;margin-left:37.5%}
+@media (max-width:760px){
+  .cats{grid-template-columns:repeat(2,1fr);padding:16px}
+  .cats .cat:nth-child(n){grid-column:auto;margin-left:0;width:auto}
+}
+.sheet .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 22px 16px;border-top:1px dashed var(--line);flex-wrap:wrap}
+.sheet .foot .math{color:var(--ink-2);font-size:14px}
+.pen{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}
+.pen input{width:70px;text-align:center}
+.submitbar{display:flex;justify-content:center;gap:12px;margin:8px 0 26px;flex-wrap:wrap}
+.submitbar .btn{padding:12px 34px;font-size:17px}
+
+/* MC scores (student's own result) */
+.mc{max-width:720px;margin:0 auto}
+.mc .panel{padding:26px 28px}
+.mc h3{font-size:30px}
+.mclist{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.mclist li{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.mclist li.p1{border-color:var(--place-1);box-shadow:inset 4px 0 0 var(--place-1)}
+.mclist li.p2{box-shadow:inset 4px 0 0 var(--place-2)}
+.mclist li.p3{box-shadow:inset 4px 0 0 var(--place-3)}
+.mclist .names{font-size:20px;font-weight:600}
+.mclist .names span{display:block;font-size:13px;color:var(--ink-3);font-weight:400}
+.mclist .score{font-family:"Barlow Condensed",sans-serif;font-size:30px;font-weight:700}
+.mclist .score span{font-size:13px;color:var(--ink-3);font-family:"Source Sans 3",sans-serif;font-weight:400;margin-left:4px}
+
+/* result code */
+.codebox{background:var(--sunken);border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px}
+.codebox textarea{width:100%;min-height:74px;font-family:ui-monospace,Consolas,monospace;font-size:13px;resize:vertical;word-break:break-all}
+.notice{border-left:4px solid var(--good);background:var(--good-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin-top:12px}
+.notice.warn{border-color:var(--warn);background:var(--warn-soft)}
+
+/* tables */
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:700;background:var(--sunken)}
+tr.result td{font-size:17px}
+.final{font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:700}
+.place{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:30px;border-radius:15px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:17px;color:#fff;padding:0 10px}
+.place.p1{background:var(--place-1)} .place.p2{background:var(--place-2)} .place.p3{background:var(--place-3)} .place.px{background:var(--ink-3)}
+.place.sm{min-width:28px;height:24px;font-size:14px}
+.place.lg{min-width:48px;height:40px;font-size:22px}
+.chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--sunken);color:var(--ink-2)}
+.chip.good{background:var(--good-soft);color:var(--good)} .chip.warn{background:var(--warn-soft);color:var(--warn)}
+.comp-grid{display:grid;grid-template-columns:auto 90px 1fr auto;gap:8px 10px;align-items:center}
+.comp-grid .hdr{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:8px}
+.wgrid input{width:100%;text-align:center}
+.wgrid .wl{font-size:12px;font-weight:600;color:var(--ink-2);text-align:center;margin-bottom:3px}
+.judgelist{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.jtag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:3px 6px 3px 4px;font-size:14px;background:var(--surface)}
+.jtag .jname{border:0;background:none;padding:2px 6px;font-weight:600;color:var(--ink);border-radius:14px}
+.jtag .jname:hover{background:var(--sunken);text-decoration:underline}
+.jtag.open{border-color:var(--accent);background:var(--accent-soft)}
+.jtag .jrm{border:0;background:var(--sunken);border-radius:50%;width:22px;height:22px;line-height:1;color:var(--ink-2)}
+.jdetail{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:16px 18px;background:var(--sunken)}
+.jdetail table{background:var(--surface)}
+.jdetail .head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.jdetail h4{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:24px;font-weight:600}
+.lock{max-width:460px;margin:40px auto;text-align:center}
+.lock input{font-size:18px;text-align:center;width:100%;margin:14px 0}
+.empty{padding:26px;text-align:center;color:var(--ink-3);border:1px dashed var(--line-strong);border-radius:8px}
+.foot-link{text-align:center;margin-top:40px}
+.foot-link button{background:none;border:0;color:var(--ink-3);font-size:13px;text-decoration:underline}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:10px 18px;border-radius:8px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <div class="brand"><div class="mark"></div><div><h1>Showcase Scrutineer</h1><div class="sub">Mock adjudication · Judge's Certification exam</div></div></div>
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" id="tab-judge" aria-selected="true" data-view="judge">Judge</button>
+    <button class="tab" role="tab" id="tab-tab" aria-selected="false" data-view="tab">Scrutineer</button>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+  <!-- ================= JUDGE: WELCOME ================= -->
+  <section id="j-welcome" class="welcome">
+    <div class="eyebrow">You are judging</div>
+    <h2 id="wName">Division</h2>
+    <div class="ht num">Heat <span id="wHeat"></span></div>
+    <div class="field">
+      <label for="judgeName">Judge's name</label>
+      <input id="judgeName" placeholder="First and last name" autocomplete="off">
+    </div>
+    <button class="btn primary" id="btnBegin">Begin Judging</button>
+    <div class="hint" id="wHint"></div>
+  </section>
+
+  <!-- ================= JUDGE: SCORING ================= -->
+  <section id="j-judging" hidden>
+    <div class="banner">
+      <h2 id="bannerName">Division</h2>
+      <div class="ht num"><span>Ht</span><span id="bannerHeat"></span></div>
+    </div>
+    <div class="judgebar">
+      <div class="who"><span>Judge:</span> <b id="whoName"></b></div>
+      <div class="progress" id="progress"></div>
+    </div>
+    <div id="sheets"></div>
+    <div class="submitbar">
+      <button class="btn primary" id="btnSubmit">Submit score</button>
+      <button class="btn quiet" id="btnClearSheet">Clear this card</button>
+    </div>
+  </section>
+
+  <!-- ================= JUDGE: MC SCORES ================= -->
+  <section id="j-done" hidden class="mc">
+    <div class="panel">
+      <div class="eyebrow">MC Scores · your placements</div>
+      <h3 id="mcTitle">Division</h3>
+      <div class="muted small" id="mcSub"></div>
+      <ol class="mclist" id="mcList"></ol>
+      <div class="small muted" style="margin-top:14px">Placements come from your weighted totals alone. Timing 20%, Musicality 15%, Technique 15%, Difficulty 15%, Connection 15%, Choreography 10%, Presentation 10%; a perfect sheet totals 100.</div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px">Your score code — send this to the instructor</div>
+      <textarea id="scoreCode" readonly class="num" style="width:100%;min-height:74px;font-family:ui-monospace,Consolas,monospace;font-size:13px;word-break:break-all"></textarea>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+        <button class="btn sm" id="btnCopyCode">Copy code</button>
+        <button class="btn sm quiet" id="btnNextJudge">Next judge on this device</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCRUTINEER ================= -->
+  <section id="view-lock" hidden class="lock">
+    <div class="eyebrow">Instructor only</div>
+    <h2 style="font-size:32px;margin-top:6px">Scrutineer</h2>
+    <p class="muted">Enter the instructor passcode to open division setup and results.</p>
+    <input id="pinInput" type="password" placeholder="Passcode" autocomplete="off">
+    <button class="btn primary" id="btnUnlock">Open Scrutineer</button>
+    <div id="pinMsg" class="small" style="margin-top:10px;color:var(--accent)"></div>
+  </section>
+
+  <section id="view-tab" hidden>
+    <div class="banner">
+      <h2 id="bannerName2">Division</h2>
+      <div class="ht num"><span>Ht</span><span id="bannerHeat2"></span></div>
+    </div>
+    <div class="panel">
+      <details id="setup" open>
+        <summary>Division setup</summary>
+        <div class="row" style="margin-top:14px">
+          <div class="field" style="flex:2;min-width:240px"><label for="divName">Division name</label><input id="divName"></div>
+          <div class="field" style="width:130px"><label for="divHeat">Heat / division #</label><input id="divHeat" class="num"></div>
+          <div class="field" style="width:170px"><label for="divPin">Instructor passcode</label><input id="divPin" autocomplete="off"></div>
+        </div>
+        <div class="eyebrow" style="margin:18px 0 8px">Entries in this division</div>
+        <div class="comp-grid" id="compGrid"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm" id="btnAddComp">Add entry</button>
+        </div>
+        <details style="margin-top:16px">
+          <summary class="small">Category weights (EventTabs → Settings → Score Categories/Weights)</summary>
+          <div class="wgrid" id="wgrid"></div>
+          <div class="small muted" style="margin-top:6px">Weights must total 100. Category points = judge score × weight ÷ 10, so a perfect sheet totals 100.</div>
+        </details>
+        <div class="row" style="margin-top:18px;justify-content:space-between">
+          <div class="row">
+            <button class="btn primary" id="btnShare">Copy student link</button>
+            <button class="btn" id="btnExample">Load example</button>
+          </div>
+          <button class="btn quiet" id="btnNewDiv">Start a new division</button>
+        </div>
+        <div class="codebox" id="shareBox" hidden>
+          <div class="eyebrow" style="margin-bottom:6px">Student link — opens straight to the welcome page for this division</div>
+          <textarea id="shareUrl" readonly style="min-height:56px"></textarea>
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h3>Judges' sheets</h3>
+      <div class="row" style="align-items:flex-start">
+        <div class="field" style="flex:1;min-width:280px">
+          <label for="pasteCode">Paste a student's score code</label>
+          <textarea id="pasteCode" style="min-height:56px;font-family:ui-monospace,Consolas,monospace;font-size:13px" placeholder="ADJ1.…"></textarea>
+        </div>
+        <button class="btn" id="btnAddCode" style="margin-top:22px">Add sheet</button>
+      </div>
+      <div id="pasteMsg" class="small" style="margin-top:6px"></div>
+      <div class="eyebrow" style="margin-top:14px">Received <span id="judgeCount"></span> · click a name to see every score</div>
+      <div class="judgelist" id="judgeList"></div>
+      <div id="judgeDetail" hidden class="jdetail"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm quiet" id="btnClearJudges">Remove all sheets</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </section>
+
+  <div class="foot-link" id="footLink" hidden><button id="btnInstructor">Instructor access</button></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const DEFAULT_CATS=[["Timing",20],["Musicality",15],["Technique",15],["Difficulty",15],["Connection",15],["Choreography",10],["Presentation",10]].map(([name,weight])=>({name,weight}));
+const DIVISION_NAME="Professional Salsa Cabaret Showcase", DEFAULT_PIN="eventtabs";
+const KEY="showcase-scrutineer-v1", JKEY="showcase-scrutineer-judge-v1", UKEY="showcase-scrutineer-unlocked";
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,8);
+const r2=x=>Math.round((x+Number.EPSILON)*100)/100;
+const fmt=x=>(Math.round(x*100)/100).toString();
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ORD=["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th"];
+
+/* ---------- example division (plainly marked) ---------- */
+function exampleState(){
+  const comps=[{id:"c1",number:"101",name:"Example: Alvarez & Chen"},{id:"c2",number:"102",name:"Example: Okafor & Reyes"},{id:"c3",number:"103",name:"Example: Nakamura & Silva"}];
+  const mk=(name,rows)=>({id:uid(),name,submittedAt:Date.now(),scores:Object.fromEntries(comps.map((c,i)=>[c.id,{s:rows[i],p:0}]))});
+  return {division:{name:DIVISION_NAME,heat:"10000",pin:DEFAULT_PIN,competitors:comps,cats:DEFAULT_CATS.map(c=>({...c}))},
+    judges:[
+      mk("Example judge A",[[8.5,8.2,8.6,8.4,8.3,8.0,8.5],[9.0,8.8,9.1,9.3,8.9,8.7,9.0],[7.8,8.0,7.6,7.5,8.1,8.2,7.9]]),
+      mk("Example judge B",[[8.8,8.5,8.4,8.6,8.7,8.3,8.6],[8.6,9.0,8.9,9.0,9.2,8.8,9.1],[8.0,7.9,7.8,7.7,8.0,8.0,8.2]]),
+      mk("Example judge C",[[8.2,8.4,8.5,8.3,8.1,8.4,8.3],[9.2,8.9,9.0,9.1,9.0,9.0,8.9],[7.5,7.8,7.9,7.6,7.7,8.1,7.8]])
+    ]};
+}
+function blankState(pin){return {division:{name:DIVISION_NAME,heat:"",pin:pin||DEFAULT_PIN,competitors:[{id:uid(),number:"",name:""},{id:uid(),number:"",name:""},{id:uid(),number:"",name:""}],cats:DEFAULT_CATS.map(c=>({...c}))},judges:[]};}
+const freshDraft=()=>({name:"",scores:{},idx:0,begun:false});
+
+/* ---------- encoding ---------- */
+const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4))));
+// The student link carries the division but never the passcode.
+const divKey=d=>b64e(JSON.stringify({n:d.name,h:d.heat,c:d.competitors.map(c=>[c.id,c.number,c.name]),w:d.cats.map(c=>[c.name,c.weight])}));
+function divFromKey(k){const o=JSON.parse(b64d(k));return {name:o.n,heat:o.h,competitors:o.c.map(([id,number,name])=>({id,number,name})),cats:o.w.map(([name,weight])=>({name,weight}))};}
+const divSig=d=>b64e(d.competitors.map(c=>c.id).join(",")+"|"+d.name).slice(0,12);
+function encodeSheet(judge,d){return "ADJ1."+b64e(JSON.stringify({j:judge.name,g:divSig(d),t:judge.submittedAt,s:judge.scores}));}
+function decodeSheet(code){
+  const m=String(code).trim().match(/ADJ1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error("That doesn't look like a score code. It should start with ADJ1.");
+  const o=JSON.parse(b64d(m[1])); if(!o.j||!o.s) throw new Error("The code is incomplete.");
+  return {id:uid(),name:String(o.j),submittedAt:o.t||Date.now(),scores:o.s,sig:o.g};
+}
+
+/* ---------- state ---------- */
+let state, view="judge", draft=freshDraft(), studentMode=false, unlocked=false, openJudge=null;
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.division&&s.judges){ if(!s.division.pin) s.division.pin=DEFAULT_PIN; return s; }}catch(e){}
+  return exampleState();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function saveDraft(){try{localStorage.setItem(JKEY,JSON.stringify(draft));}catch(e){}}
+function loadDraft(){try{const d=JSON.parse(localStorage.getItem(JKEY)); if(d&&d.scores) draft={...freshDraft(),...d};}catch(e){}}
+
+/* ---------- math (mirrors EventTabs) ---------- */
+function catPoints(score,weight){return r2(score*weight/10);}
+function judgeTotal(entry,cats){
+  if(!entry) return null;
+  const pts=cats.map((c,i)=>catPoints(Number(entry.s[i]),c.weight));
+  return {pts,total:r2(pts.reduce((a,b)=>a+b,0)-(Number(entry.p)||0))};
+}
+function rankJudge(scores,d){ // -> [{comp,total,place}] sorted by place
+  const rows=d.competitors.map(c=>({comp:c,total:judgeTotal(scores[c.id],d.cats)?.total})).filter(r=>r.total!=null).sort((a,b)=>b.total-a.total);
+  rows.forEach((r,i)=>{r.place=(i>0&&rows[i-1].total===r.total)?rows[i-1].place:i+1;});
+  return rows;
+}
+function tabulate(){
+  const d=state.division, cats=d.cats;
+  const rows=d.competitors.map(c=>{
+    const per=state.judges.map(j=>({judge:j,calc:judgeTotal(j.scores[c.id],cats)}));
+    const scored=per.filter(p=>p.calc);
+    const final=scored.length?r2(scored.reduce((a,p)=>a+p.calc.total,0)/scored.length):null;
+    return {comp:c,per,final,count:scored.length};
+  });
+  const ranked=rows.filter(r=>r.final!==null).slice().sort((a,b)=>b.final-a.final);
+  ranked.forEach((r,i)=>{r.place=(i>0&&ranked[i-1].final===r.final)?ranked[i-1].place:i+1;});
+  state.judges.forEach(j=>{j._places={};rankJudge(j.scores,d).forEach(r=>{j._places[r.comp.id]=r.place;});});
+  return rows;
+}
+
+/* ---------- views ---------- */
+function setView(v){
+  view=v;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.view===v)));
+  const judge=v==="judge";
+  $("#j-welcome").hidden=!(judge&&!draft.begun);
+  $("#j-judging").hidden=!(judge&&draft.begun&&draft.idx<state.division.competitors.length);
+  $("#j-done").hidden=!(judge&&draft.begun&&draft.idx>=state.division.competitors.length);
+  $("#view-lock").hidden=!(v==="tab"&&!unlocked);
+  $("#view-tab").hidden=!(v==="tab"&&unlocked);
+  $("#footLink").hidden=!(studentMode&&judge);
+  if(!studentMode){try{localStorage.setItem(KEY+"-view",v);}catch(e){}}
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.view)));
+$("#btnInstructor").addEventListener("click",()=>{$("#tabs").hidden=false;setView("tab");$("#pinInput").focus();});
+$("#btnUnlock").addEventListener("click",tryUnlock);
+$("#pinInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryUnlock();});
+function tryUnlock(){
+  const pin=(state.division.pin||DEFAULT_PIN);
+  if($("#pinInput").value===pin){unlocked=true;try{sessionStorage.setItem(UKEY,"1");}catch(e){} $("#pinInput").value="";$("#pinMsg").textContent="";setView("tab");}
+  else{$("#pinMsg").textContent="That passcode doesn't match. The passcode is set in Division setup; the default is “eventtabs”.";}
+}
+
+/* ---------- judge: welcome ---------- */
+function renderWelcome(){
+  const d=state.division;
+  $("#wName").textContent=d.name||"Division"; $("#wHeat").textContent=d.heat?Number(d.heat).toFixed(1):"—";
+  $("#judgeName").value=draft.name||"";
+  const n=d.competitors.length;
+  $("#wHint").textContent=`${n} ${n===1?"entry":"entries"} will be shown one at a time. Score each category from 1.0 to 10.0; once you submit an entry it is locked and the next one appears.`;
+}
+$("#judgeName").addEventListener("input",e=>{draft.name=e.target.value;saveDraft();});
+$("#judgeName").addEventListener("keydown",e=>{if(e.key==="Enter")$("#btnBegin").click();});
+$("#btnBegin").addEventListener("click",()=>{
+  const name=($("#judgeName").value||"").trim();
+  if(!name){$("#judgeName").focus();toast("Enter the judge's name to begin");return;}
+  if(!state.division.competitors.length){toast("This division has no entries yet");return;}
+  draft.name=name; draft.begun=true; draft.idx=0; draft.scores={}; saveDraft();
+  renderSheets(); setView("judge"); window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* ---------- judge: scoring, one entry at a time ---------- */
+function renderSheets(){
+  const d=state.division;
+  $("#bannerName").textContent=d.name||"Division"; $("#bannerHeat").textContent=d.heat?Number(d.heat).toFixed(1):"—";
+  $("#whoName").textContent=draft.name;
+  if(!Number.isInteger(draft.idx)||draft.idx<0) draft.idx=0;
+  $("#progress").innerHTML=d.competitors.map((c,i)=>`<i class="${i<draft.idx?"done":i===draft.idx?"now":""}" title="Entry ${i+1}"></i>`).join("");
+  if(draft.idx>=d.competitors.length){ renderDone(); return; }
+  $("#btnSubmit").textContent=draft.idx===d.competitors.length-1?"Submit score":"Submit score & next entry";
+  const c=d.competitors[draft.idx], e=draft.scores[c.id]||{s:[],p:0};
+  $("#sheets").innerHTML=`<div class="sheet" data-comp="${c.id}">
+      <header><div class="eyebrow" style="margin-bottom:8px">Entry ${draft.idx+1} of ${d.competitors.length}</div>${c.number?`<div class="bib">#${esc(c.number)}</div>`:""}<h3>${esc(c.name||"Unnamed entry")}</h3></header>
+      <div class="cats">${d.cats.map((cat,i)=>`<div class="cat"><div class="name">${esc(cat.name)}</div><input type="number" inputmode="decimal" min="1" max="10" step="0.1" placeholder="–" data-i="${i}" value="${e.s[i]??""}" aria-label="${esc(cat.name)} for ${esc(c.name)}"></div>`).join("")}</div>
+      <div class="foot">
+        <div class="pen"><label>Penalty (P)</label><input type="number" min="0" step="0.1" value="${e.p||0}" data-pen aria-label="Penalty for ${esc(c.name)}"></div>
+        <div class="math" data-math></div>
+      </div>
+    </div>`;
+  $("#sheets").querySelectorAll("input").forEach(inp=>inp.addEventListener("input",onSheetInput));
+  updateMath(c.id);
+}
+function readSheet(compId){
+  const el=$(`.sheet[data-comp="${compId}"]`);
+  const s=[...el.querySelectorAll("input[data-i]")].map(i=>i.value===""?null:Number(i.value));
+  const p=Number(el.querySelector("[data-pen]").value)||0;
+  return {s,p};
+}
+function onSheetInput(e){
+  const compId=e.target.closest(".sheet").dataset.comp;
+  draft.scores[compId]=readSheet(compId); saveDraft(); updateMath(compId);
+}
+function updateMath(compId){
+  const el=$(`.sheet[data-comp="${compId}"]`); if(!el) return;
+  const {s}=readSheet(compId);
+  const done=s.filter(v=>v!==null).length;
+  el.querySelector("[data-math]").innerHTML=`<span class="muted">${done} of ${s.length} categories scored</span>`;
+}
+function validateSheet(){
+  let ok=true;
+  document.querySelectorAll(".sheet .cat").forEach(c=>{const v=c.querySelector("input").value;const n=Number(v);const bad=v===""||isNaN(n)||n<1||n>10||Math.abs(n*10-Math.round(n*10))>1e-9;c.classList.toggle("bad",bad);if(bad)ok=false;});
+  return ok;
+}
+$("#btnSubmit").addEventListener("click",()=>{
+  const d=state.division, c=d.competitors[draft.idx]; if(!c) return;
+  if(!validateSheet()){toast("Every category needs a score from 1.0 to 10.0");const b=$(".cat.bad input");if(b)b.focus();return;}
+  const {s,p}=readSheet(c.id); draft.scores[c.id]={s:s.map(Number),p}; draft.idx++; saveDraft();
+  if(draft.idx<d.competitors.length){ renderSheets(); window.scrollTo({top:0,behavior:"smooth"}); toast(`Score locked for entry ${draft.idx}. Next entry.`); return; }
+  // last entry scored: file the judge's sheet
+  const judge={id:uid(),name:draft.name,submittedAt:Date.now(),scores:{}};
+  d.competitors.forEach(x=>{judge.scores[x.id]=draft.scores[x.id];});
+  state.judges=state.judges.filter(j=>j.name.toLowerCase()!==draft.name.toLowerCase()).concat(judge);
+  save(); draft.code=encodeSheet(judge,d); saveDraft();
+  renderDone(); setView("judge"); renderTab(); window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#btnClearSheet").addEventListener("click",()=>{const c=state.division.competitors[draft.idx];if(c){delete draft.scores[c.id];}saveDraft();renderSheets();});
+
+/* ---------- judge: MC scores ---------- */
+function renderDone(){
+  const d=state.division;
+  $("#mcTitle").textContent=d.name; $("#mcSub").textContent=`Judge: ${draft.name}${d.heat?` · Heat ${Number(d.heat).toFixed(1)}`:""}`;
+  const rows=rankJudge(draft.scores,d);
+  $("#mcList").innerHTML=rows.map(r=>`<li class="${r.place<=3?"p"+r.place:""}"><span class="place lg ${r.place<=3?"p"+r.place:"px"}">${ORD[r.place-1]||r.place+"th"}</span><div class="names">${esc(r.comp.name||"Unnamed entry")}${r.comp.number?`<span>#${esc(r.comp.number)}</span>`:""}</div><div class="score num">${fmt(r.total)}<span>/ 100</span></div></li>`).join("");
+  $("#scoreCode").value=draft.code||"";
+}
+$("#btnNextJudge").addEventListener("click",()=>{draft=freshDraft();saveDraft();renderWelcome();setView("judge");window.scrollTo({top:0,behavior:"smooth"});});
+$("#btnCopyCode").addEventListener("click",()=>copyText($("#scoreCode")));
+
+/* ---------- scrutineer ---------- */
+function renderSetup(){
+  const d=state.division;
+  $("#bannerName2").textContent=d.name||"Division"; $("#bannerHeat2").textContent=d.heat?Number(d.heat).toFixed(1):"—";
+  $("#divName").value=d.name; $("#divHeat").value=d.heat; $("#divPin").value=d.pin||DEFAULT_PIN;
+  $("#compGrid").innerHTML=`<div class="hdr"></div><div class="hdr">Number</div><div class="hdr">Names</div><div class="hdr"></div>`+
+    d.competitors.map((c,i)=>`<div class="muted small">${i+1}.</div><input class="num" data-cnum="${c.id}" value="${esc(c.number)}" placeholder="#"><input data-cname="${c.id}" value="${esc(c.name)}" placeholder="Leader & Follower"><button class="btn sm quiet" data-crm="${c.id}" ${d.competitors.length<=1?"disabled":""} aria-label="Remove">✕</button>`).join("");
+  $("#wgrid").innerHTML=d.cats.map((c,i)=>`<div><div class="wl">${esc(c.name)}</div><input type="number" min="0" max="100" step="0.5" data-w="${i}" value="${c.weight}"></div>`).join("");
+  $("#compGrid").querySelectorAll("[data-cnum]").forEach(i=>i.addEventListener("input",e=>{comp(e.target.dataset.cnum).number=e.target.value;save();renderJudgeSide();renderTab();}));
+  $("#compGrid").querySelectorAll("[data-cname]").forEach(i=>i.addEventListener("input",e=>{comp(e.target.dataset.cname).name=e.target.value;save();renderJudgeSide();renderTab();}));
+  $("#compGrid").querySelectorAll("[data-crm]").forEach(b=>b.addEventListener("click",e=>{d.competitors=d.competitors.filter(c=>c.id!==e.currentTarget.dataset.crm);save();renderAll();}));
+  $("#wgrid").querySelectorAll("[data-w]").forEach(i=>i.addEventListener("input",e=>{d.cats[e.target.dataset.w].weight=Number(e.target.value)||0;save();renderTab();}));
+}
+const comp=id=>state.division.competitors.find(c=>c.id===id);
+$("#divName").addEventListener("input",e=>{state.division.name=e.target.value;save();renderJudgeSide();renderTab();$("#bannerName2").textContent=state.division.name||"Division";});
+$("#divHeat").addEventListener("input",e=>{state.division.heat=e.target.value;save();renderJudgeSide();$("#bannerHeat2").textContent=state.division.heat?Number(state.division.heat).toFixed(1):"—";});
+$("#divPin").addEventListener("input",e=>{state.division.pin=e.target.value.trim()||DEFAULT_PIN;save();});
+$("#btnAddComp").addEventListener("click",()=>{state.division.competitors.push({id:uid(),number:"",name:""});save();renderAll();});
+$("#btnExample").addEventListener("click",()=>{const pin=state.division.pin;state=exampleState();state.division.pin=pin;draft=freshDraft();saveDraft();save();renderAll();toast("Example division loaded");});
+$("#btnNewDiv").addEventListener("click",()=>{if(!confirm("Start a new division? This removes the current entries and all judges' sheets on this device."))return;state=blankState(state.division.pin);draft=freshDraft();saveDraft();save();renderAll();$("#divName").focus();});
+$("#btnShare").addEventListener("click",()=>{
+  const url=location.origin+location.pathname+"#d="+divKey(state.division);
+  $("#shareUrl").value=url; $("#shareBox").hidden=false; copyText($("#shareUrl"));
+});
+$("#btnAddCode").addEventListener("click",()=>{
+  const msg=$("#pasteMsg");
+  try{
+    const j=decodeSheet($("#pasteCode").value);
+    const missing=state.division.competitors.filter(c=>!j.scores[c.id]);
+    if(j.sig!==divSig(state.division)||missing.length){
+      msg.innerHTML=`<span class="chip warn">Different division</span> This code was scored on a different entry list. Load that division first, or ask the student to rescore from your current student link.`;
+      return;
+    }
+    state.judges=state.judges.filter(x=>x.name.toLowerCase()!==j.name.toLowerCase()).concat(j); save();
+    $("#pasteCode").value=""; msg.innerHTML=`<span class="chip good">Added</span> ${esc(j.name)}'s sheet.`;
+    openJudge=j.id; renderTab();
+  }catch(e){msg.innerHTML=`<span class="chip warn">Not added</span> ${esc(e.message)}`;}
+});
+$("#btnClearJudges").addEventListener("click",()=>{if(!state.judges.length)return;if(!confirm("Remove all judges' sheets?"))return;state.judges=[];openJudge=null;save();renderTab();});
+
+function renderJudges(){
+  $("#judgeCount").textContent=`${state.judges.length} sheet${state.judges.length===1?"":"s"}`;
+  $("#judgeList").innerHTML=state.judges.length?state.judges.map(j=>`<span class="jtag ${openJudge===j.id?"open":""}"><button class="jname" data-jopen="${j.id}" aria-expanded="${openJudge===j.id}">${esc(j.name)}</button><button class="jrm" data-jrm="${j.id}" aria-label="Remove ${esc(j.name)}">✕</button></span>`).join(""):`<span class="muted small">No sheets yet. Students submit from the student link, then paste their score codes above.</span>`;
+  $("#judgeList").querySelectorAll("[data-jopen]").forEach(b=>b.addEventListener("click",e=>{const id=e.currentTarget.dataset.jopen;openJudge=openJudge===id?null:id;renderJudges();}));
+  $("#judgeList").querySelectorAll("[data-jrm]").forEach(b=>b.addEventListener("click",e=>{const id=e.currentTarget.dataset.jrm;state.judges=state.judges.filter(j=>j.id!==id);if(openJudge===id)openJudge=null;save();renderTab();}));
+  renderJudgeDetail();
+}
+function renderJudgeDetail(){
+  const box=$("#judgeDetail"), j=state.judges.find(x=>x.id===openJudge);
+  if(!j){box.hidden=true;box.innerHTML="";return;}
+  const d=state.division, cats=d.cats, ranked=rankJudge(j.scores,d), placeOf=Object.fromEntries(ranked.map(r=>[r.comp.id,r.place]));
+  const when=j.submittedAt?new Date(j.submittedAt).toLocaleString():"";
+  let h=`<div class="head"><h4>${esc(j.name)} — every score entered</h4><span class="small muted">${esc(when)}</span></div>
+  <div class="tblwrap"><table><thead><tr><th>Category</th><th class="n">Weight</th>${d.competitors.map(c=>`<th class="n">${c.number?"#"+esc(c.number)+"<br>":""}<span style="letter-spacing:0;text-transform:none;font-size:13px">${esc(c.name)}</span></th>`).join("")}</tr></thead><tbody>`;
+  cats.forEach((cat,i)=>{
+    h+=`<tr><td>${esc(cat.name)}</td><td class="n muted">${fmt(cat.weight)}%</td>${d.competitors.map(c=>{const e=j.scores[c.id];if(!e)return`<td class="n muted">—</td>`;const raw=Number(e.s[i]);return`<td class="n"><b>${fmt(raw)}</b> <span class="muted small">→ ${fmt(catPoints(raw,cat.weight))}</span></td>`;}).join("")}</tr>`;
+  });
+  h+=`<tr><td>Penalty (P)</td><td></td>${d.competitors.map(c=>`<td class="n">${j.scores[c.id]?fmt(j.scores[c.id].p||0):"—"}</td>`).join("")}</tr>`;
+  h+=`<tr class="total"><td>Weighted total</td><td></td>${d.competitors.map(c=>{const t=judgeTotal(j.scores[c.id],cats);return`<td class="n final">${t?fmt(t.total):"—"}</td>`;}).join("")}</tr>`;
+  h+=`<tr class="total"><td>${esc(j.name)}'s placement</td><td></td>${d.competitors.map(c=>`<td class="n">${placeTag(placeOf[c.id],true)}</td>`).join("")}</tr>`;
+  h+=`</tbody></table></div><div class="small muted" style="margin-top:8px">Bold is the raw 1–10 score the judge typed; the arrow shows its weighted points (score × weight ÷ 10).</div>`;
+  box.innerHTML=h; box.hidden=false;
+}
+function placeTag(p,sm){if(!p)return"";return `<span class="place ${p<=3?"p"+p:"px"} ${sm?"sm":""}">${ORD[p-1]||p+"th"}</span>`;}
+function renderResults(){
+  const d=state.division, cats=d.cats, wsum=cats.reduce((a,c)=>a+c.weight,0);
+  const rows=tabulate();
+  let html="";
+  if(Math.abs(wsum-100)>0.001) html+=`<div class="notice warn" style="margin-bottom:18px"><b>Weights total ${fmt(wsum)}%, not 100%.</b> Totals will not be out of 100 until this is fixed in Division setup.</div>`;
+  if(!state.judges.length){ $("#results").innerHTML=html+`<div class="empty">Results appear here once the first score sheet is in.</div>`; return; }
+
+  html+=`<div class="panel"><h3>Result — ${esc(d.name)}</h3>
+  <div class="small muted" style="margin-bottom:10px">Final = average of every judge's weighted total (no high/low dropped), rounded to two decimals. Highest final places first.</div>
+  <div class="tblwrap"><table><thead><tr><th>Place</th><th>#</th><th>Names</th>${state.judges.map(j=>`<th class="n">${esc(j.name)}</th>`).join("")}<th class="n">Final</th></tr></thead><tbody>`+
+  rows.slice().sort((a,b)=>(a.place||99)-(b.place||99)).map(r=>`<tr class="result"><td>${placeTag(r.place)}</td><td class="num">${esc(r.comp.number)}</td><td>${esc(r.comp.name)}</td>${r.per.map(p=>`<td class="n">${p.calc?fmt(p.calc.total):"<span class='muted'>—</span>"}</td>`).join("")}<td class="n final">${r.final===null?"—":fmt(r.final)}</td></tr>`).join("")+
+  `</tbody></table></div></div>`;
+
+  html+=`<div class="panel"><h3>How each judge placed the division</h3>
+  <div class="small muted" style="margin-bottom:10px">Each judge's own ranking from their weighted totals, next to the tabulated result. This is what each student saw on their MC Scores screen.</div>
+  <div class="tblwrap"><table><thead><tr><th>Judge</th>${d.competitors.map(c=>`<th>${esc(c.number?"#"+c.number+" ":"")}${esc(c.name)}</th>`).join("")}<th>Matches result</th></tr></thead><tbody>`+
+  state.judges.map(j=>{const agree=rows.every(r=>!r.place||j._places[r.comp.id]===r.place);return `<tr><td>${esc(j.name)}</td>${d.competitors.map(c=>`<td>${placeTag(j._places[c.id],true)}</td>`).join("")}<td>${agree?`<span class="chip good">Yes</span>`:`<span class="chip">Differs</span>`}</td></tr>`;}).join("")+
+  `<tr class="total"><td>Tabulated result</td>${rows.map(r=>`<td>${placeTag(r.place,true)}</td>`).join("")}<td></td></tr></tbody></table></div></div>`;
+
+  rows.forEach(r=>{
+    html+=`<div class="panel"><div class="eyebrow">${esc(d.name)}</div><h3 style="font-weight:500">${r.comp.number?"#"+esc(r.comp.number)+" · ":""}${esc(r.comp.name)}</h3>
+    <div class="tblwrap"><table><thead><tr><th>Judge</th>${cats.map(c=>`<th class="n">${esc(c.name.slice(0,7))}<br><span style="font-weight:400;letter-spacing:0">${fmt(c.weight)}%</span></th>`).join("")}<th class="n">P</th><th class="n">SC Total</th><th>Place</th></tr></thead><tbody>`+
+    r.per.map(p=>p.calc?`<tr><td>${esc(p.judge.name)}</td>${p.calc.pts.map((x,i)=>`<td class="n">${fmt(x)}<span class="muted small"> (${fmt(p.judge.scores[r.comp.id].s[i])})</span></td>`).join("")}<td class="n">${fmt(p.judge.scores[r.comp.id].p||0)}</td><td class="n"><b>${fmt(p.calc.total)}</b></td><td>${placeTag(p.judge._places[r.comp.id],true)}</td></tr>`:`<tr><td>${esc(p.judge.name)}</td><td colspan="${cats.length+3}" class="muted">Not scored</td></tr>`).join("")+
+    `<tr class="total"><td>Final (avg of ${r.count})</td><td colspan="${cats.length+1}"></td><td class="n final">${r.final===null?"—":fmt(r.final)}</td><td>${placeTag(r.place,true)}</td></tr></tbody></table></div>
+    <div class="small muted" style="margin-top:6px">Each cell shows weighted points with the judge's raw 1–10 score in parentheses. Points = score × weight ÷ 10.</div></div>`;
+  });
+  $("#results").innerHTML=html;
+}
+function renderTab(){renderJudges();renderResults();}
+function renderJudgeSide(){renderWelcome();if(draft.begun)renderSheets();}
+function renderAll(){renderJudgeSide();renderSetup();renderTab();setView(view);}
+
+/* ---------- utilities ---------- */
+let toastT; function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
+async function copyText(ta){
+  ta.focus(); ta.select();
+  try{await navigator.clipboard.writeText(ta.value);toast("Copied");}
+  catch(e){try{document.execCommand("copy");toast("Copied");}catch(e2){toast("Select the text and copy it manually");}}
+}
+
+/* ---------- boot ---------- */
+state=load(); loadDraft();
+try{unlocked=sessionStorage.getItem(UKEY)==="1";}catch(e){}
+const hash=new URLSearchParams(location.hash.replace(/^#/,""));
+if(hash.get("d")){
+  // Student link: judge flow only, no Scrutineer tab.
+  studentMode=true; $("#tabs").hidden=true;
+  try{
+    const inc=divFromKey(hash.get("d"));
+    if(divSig(inc)!==divSig(state.division)){ inc.pin=state.division.pin; state.division=inc; state.judges=[]; draft=freshDraft(); saveDraft(); save(); }
+  }catch(e){}
+  view="judge";
+}else{
+  view="judge"; try{view=localStorage.getItem(KEY+"-view")||"judge";}catch(e){}
+}
+if(draft.begun&&draft.idx>=state.division.competitors.length&&!draft.code){
+  const j=state.judges.find(x=>x.name.toLowerCase()===(draft.name||"").toLowerCase()); if(j) draft.code=encodeSheet(j,state.division);
+}
+renderAll();
+})();
+</script>
+</body>
+</html>
